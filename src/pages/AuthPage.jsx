@@ -30,32 +30,32 @@ export default function AuthPage({ mode }) {
 
   return (
     <div className="min-h-screen bg-bg lg:grid lg:grid-cols-[minmax(0,1.08fr)_minmax(460px,0.92fr)]">
-      <section className="relative isolate flex min-h-[250px] flex-col justify-between overflow-hidden bg-[#1E201E] text-[#ECDFCC] sm:min-h-[300px] lg:sticky lg:top-0 lg:h-screen lg:min-h-0">
+      <section className="relative isolate flex min-h-[194px] flex-col justify-between overflow-hidden bg-[#1E201E] text-[#ECDFCC] sm:min-h-[224px] lg:sticky lg:top-0 lg:h-screen lg:min-h-0">
         <img src="/inventory-hero.png" alt="" aria-hidden="true" className="absolute inset-0 h-full w-full object-cover object-center" />
         <div className="absolute inset-0 bg-gradient-to-br from-[#1E201E]/85 via-[#1E201E]/60 to-[#697565]/55" aria-hidden="true" />
-        <div className="relative flex h-full flex-col justify-between p-6 sm:p-8 lg:p-12">
+        <div className="relative flex h-full flex-col justify-between p-5 sm:p-7 lg:p-12">
           <Wordmark />
-          <div className="max-w-xl py-10 lg:py-0">
+          <div className="max-w-xl py-3 sm:py-4 lg:py-0">
             <span className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1.5 text-xs font-medium text-white/90 backdrop-blur">
               <PackageCheck className="h-3.5 w-3.5" aria-hidden />
               Sistem inventaris sekolah
             </span>
-            <h2 className="mt-5 text-[32px] font-semibold leading-[1.08] tracking-[-0.04em] text-white sm:text-[42px] lg:text-[52px]">
+            <h2 className="mt-3 text-[25px] font-semibold leading-[1.08] tracking-[-0.04em] text-white sm:text-[34px] lg:text-[52px]">
               Catat, pinjam, kembalikan.
             </h2>
-            <p className="mt-4 max-w-md text-sm leading-relaxed text-white/75 sm:text-base">
+            <p className="mt-4 hidden max-w-md text-sm leading-relaxed text-white/75 lg:block lg:text-base">
               Setiap barang dan ruangan punya jejak yang jelas, supaya inventaris sekolah selalu siap digunakan.
             </p>
           </div>
-          <div className="hidden items-center gap-3 text-sm text-white/80 sm:flex">
+          <div className="hidden items-center gap-3 text-sm text-white/80 lg:flex">
             <img src="/smk-pi.png" alt="" className="h-10 w-10 rounded-full bg-white p-0.5" />
             <span>Dipakai di SMK Prakarya Internasional</span>
           </div>
         </div>
       </section>
 
-      <main className="flex min-h-[calc(100vh-250px)] items-center justify-center px-4 py-8 sm:min-h-[calc(100vh-300px)] sm:px-8 lg:min-h-screen lg:px-10 lg:py-12">
-        <section className="w-full max-w-[440px] rounded-[28px] border border-line/70 bg-surface p-6 shadow-[0_20px_70px_rgba(30,32,30,0.08)] sm:p-9 lg:p-10">
+      <main className="relative z-10 -mt-8 flex items-start justify-center bg-gradient-to-b from-transparent via-bg/95 to-bg px-4 pb-8 pt-4 sm:-mt-10 sm:px-8 sm:pt-5 lg:mt-0 lg:min-h-screen lg:items-center lg:bg-none lg:px-10 lg:py-12">
+        <section className="w-full max-w-[440px] rounded-[28px] border border-line/70 bg-surface/95 p-6 shadow-[0_20px_70px_rgba(30,32,30,0.12)] backdrop-blur-2xl sm:p-9 lg:p-10">
           <nav className="mb-7 grid grid-cols-2 rounded-xl bg-sunken p-1" aria-label="Masuk atau daftar">
             <Link to="/masuk" aria-current={isLogin ? 'page' : undefined}
               className={`rounded-lg px-3 py-2.5 text-center text-sm font-semibold transition-colors ${isLogin ? 'bg-surface text-ink shadow-sm' : 'text-muted hover:text-ink'}`}>

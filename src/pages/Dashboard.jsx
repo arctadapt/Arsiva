@@ -146,7 +146,7 @@ export default function Dashboard() {
               <p className="mt-2 max-w-sm text-sm leading-relaxed text-muted">
                 {admin ? 'Tinjau permintaan dan jaga data inventaris sekolah tetap akurat.' : 'Cari barang atau ruangan yang tersedia, lalu kirim permintaan langsung ke admin.'}
               </p>
-              <Link to={admin ? '/kelola' : '/katalog'} className="mt-5 inline-flex items-center gap-2 rounded-full bg-ink px-4 py-2.5 text-sm font-semibold text-[#ECDFCC] transition-transform hover:translate-x-0.5">
+              <Link to={admin ? '/kelola' : '/katalog'} className="mt-5 inline-flex items-center gap-2 rounded-full bg-[#1E201E] px-4 py-2.5 text-sm font-semibold text-[#ECDFCC] transition-transform hover:translate-x-0.5 dark:bg-[#ECDFCC] dark:text-[#1E201E]">
                 {admin ? 'Kelola aset' : 'Jelajahi katalog'} <ArrowRight className="h-4 w-4" aria-hidden />
               </Link>
             </div>

@@ -52,6 +52,7 @@ export default function App() {
         <Route path="katalog" element={<Katalog />} />
         <Route path="riwayat" element={<Riwayat />} />
         <Route path="notifikasi" element={<Notifikasi />} />
+        <Route path="notifikasi/:id" element={<Notifikasi />} />
         <Route path="profil" element={<Profil />} />
         <Route path="permintaan" element={<RequireAdmin><Permintaan /></RequireAdmin>} />
         <Route path="kelola" element={<RequireAdmin><Kelola /></RequireAdmin>} />
