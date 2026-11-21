@@ -1,0 +1,114 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Token warna. Nilai dalam format "R G B" supaya bisa dipakai dengan opacity di Tailwind. */
+:root {
+  --bg: 237 242 244;
+  --surface: 255 255 255;
+  --sunken: 226 234 238;
+  --ink: 34 49 58;
+  --muted: 88 105 115;
+  --line: 211 221 227;
+  --primary: 14 74 92;
+  --on-primary: 255 255 255;
+  --rail: 14 74 92;
+  --tag: 244 184 35;
+  --ok: 46 125 87;
+  --bad: 179 54 43;
+  --warn: 138 90 0;
+  --focus: 14 74 92;
+  color-scheme: light;
+}
+
+.dark {
+  --bg: 8 36 46;
+  --surface: 13 50 63;
+  --sunken: 9 41 52;
+  --ink: 226 236 240;
+  --muted: 148 171 181;
+  --line: 29 76 92;
+  --primary: 244 184 35;
+  --on-primary: 8 36 46;
+  --rail: 6 28 37;
+  --tag: 244 184 35;
+  --ok: 108 204 156;
+  --bad: 244 136 124;
+  --warn: 244 184 35;
+  --focus: 244 184 35;
+  color-scheme: dark;
+}
+
+@layer base {
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    @apply bg-bg text-ink font-sans antialiased;
+    font-feature-settings: 'ss01', 'cv11';
+  }
+  :focus-visible {
+    outline: 2px solid rgb(var(--focus));
+    outline-offset: 2px;
+  }
+  .rail :focus-visible { outline-color: rgb(var(--tag)); }
+  input[type='number'] { -moz-appearance: textfield; appearance: textfield; }
+  input[type='number']::-webkit-inner-spin-button,
+  input[type='number']::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+  ::selection { background: rgb(var(--tag) / 0.45); }
+}
+
+@layer components {
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-semibold
+      transition-colors disabled:cursor-not-allowed disabled:opacity-50;
+  }
+  .btn-primary { @apply btn bg-primary text-on-primary hover:brightness-110; }
+  .btn-quiet { @apply btn border border-line bg-surface text-ink hover:bg-sunken; }
+  .btn-danger { @apply btn bg-bad text-white hover:brightness-110; }
+  .btn-sm { @apply px-3 py-1.5 text-[13px]; }
+
+  .input {
+    @apply w-full rounded-lg border border-line bg-surface px-3.5 py-2.5 text-[15px] text-ink
+      placeholder:text-muted/70 transition-colors;
+  }
+  .input:hover { border-color: rgb(var(--muted) / 0.6); }
+  .label { @apply mb-1.5 block text-sm font-semibold text-ink; }
+  .hint { @apply mt-1.5 text-[13px] text-muted; }
+
+  /* Label aset: elemen khas Arsiva. Bentuk stiker/tag dengan lubang gantung. */
+  .asset-tag {
+    @apply relative inline-flex shrink-0 items-center whitespace-nowrap py-[3px] pl-[1.55rem] pr-2.5 font-mono text-xs font-medium;
+    background: rgb(var(--tag));
+    color: #3a2a00;
+    clip-path: polygon(0.7rem 0, 100% 0, 100% 100%, 0.7rem 100%, 0 50%);
+  }
+  .asset-tag::before {
+    content: '';
+    position: absolute;
+    left: 0.6rem;
+    top: 50%;
+    width: 0.42rem;
+    height: 0.42rem;
+    margin-top: -0.21rem;
+    border-radius: 9999px;
+    background: rgb(var(--surface));
+    box-shadow: inset 0 0 0 1px rgb(0 0 0 / 0.18);
+  }
+}
+
+/* Satu momen gerak: label di halaman masuk berayun lalu diam. */
+@keyframes ayun {
+  0% { transform: rotate(9deg); }
+  22% { transform: rotate(-6deg); }
+  44% { transform: rotate(3.5deg); }
+  66% { transform: rotate(-1.8deg); }
+  100% { transform: rotate(0deg); }
+}
+.tag-ayun { transform-origin: 50% 0; animation: ayun 2.6s ease-out 0.25s both; }
+
+@keyframes muncul { from { opacity: 0; transform: translateY(8px) scale(0.98); } to { opacity: 1; transform: none; } }
+.modal-in { animation: muncul 0.16s ease-out both; }
+
+@media (prefers-reduced-motion: reduce) {
+  .tag-ayun, .modal-in { animation: none; }
+  * { scroll-behavior: auto !important; }
+}
