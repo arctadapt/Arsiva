@@ -4,38 +4,40 @@
 
 /* Token warna. Nilai dalam format "R G B" supaya bisa dipakai dengan opacity di Tailwind. */
 :root {
-  --bg: 237 242 244;
-  --surface: 255 255 255;
-  --sunken: 226 234 238;
-  --ink: 34 49 58;
-  --muted: 88 105 115;
-  --line: 211 221 227;
-  --primary: 14 74 92;
-  --on-primary: 255 255 255;
-  --rail: 14 74 92;
-  --tag: 244 184 35;
-  --ok: 46 125 87;
+  --bg: 236 223 204;
+  --surface: 247 242 231;
+  --sunken: 225 214 195;
+  --ink: 30 32 30;
+  --muted: 105 117 101;
+  --line: 204 194 176;
+  --primary: 60 61 55;
+  --on-primary: 236 223 204;
+  --rail: 30 32 30;
+  --tag: 60 61 55;
+  --tag-ink: 236 223 204;
+  --ok: 105 117 101;
   --bad: 179 54 43;
-  --warn: 138 90 0;
-  --focus: 14 74 92;
+  --warn: 105 117 101;
+  --focus: 60 61 55;
   color-scheme: light;
 }
 
 .dark {
-  --bg: 8 36 46;
-  --surface: 13 50 63;
-  --sunken: 9 41 52;
-  --ink: 226 236 240;
-  --muted: 148 171 181;
-  --line: 29 76 92;
-  --primary: 244 184 35;
-  --on-primary: 8 36 46;
-  --rail: 6 28 37;
-  --tag: 244 184 35;
-  --ok: 108 204 156;
+  --bg: 30 32 30;
+  --surface: 60 61 55;
+  --sunken: 47 49 45;
+  --ink: 236 223 204;
+  --muted: 176 183 169;
+  --line: 83 85 77;
+  --primary: 236 223 204;
+  --on-primary: 30 32 30;
+  --rail: 24 25 24;
+  --tag: 60 61 55;
+  --tag-ink: 236 223 204;
+  --ok: 158 179 151;
   --bad: 244 136 124;
-  --warn: 244 184 35;
-  --focus: 244 184 35;
+  --warn: 236 223 204;
+  --focus: 236 223 204;
   color-scheme: dark;
 }
 
@@ -78,7 +80,7 @@
   .asset-tag {
     @apply relative inline-flex shrink-0 items-center whitespace-nowrap py-[3px] pl-[1.55rem] pr-2.5 font-mono text-xs font-medium;
     background: rgb(var(--tag));
-    color: #3a2a00;
+    color: rgb(var(--tag-ink));
     clip-path: polygon(0.7rem 0, 100% 0, 100% 100%, 0.7rem 100%, 0 50%);
   }
   .asset-tag::before {
