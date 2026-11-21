@@ -56,6 +56,16 @@ export default function AuthPage({ mode }) {
 
       <main className="flex min-h-[calc(100vh-250px)] items-center justify-center px-4 py-8 sm:min-h-[calc(100vh-300px)] sm:px-8 lg:min-h-screen lg:px-10 lg:py-12">
         <section className="w-full max-w-[440px] rounded-[28px] border border-line/70 bg-surface p-6 shadow-[0_20px_70px_rgba(30,32,30,0.08)] sm:p-9 lg:p-10">
+          <nav className="mb-7 grid grid-cols-2 rounded-xl bg-sunken p-1" aria-label="Masuk atau daftar">
+            <Link to="/masuk" aria-current={isLogin ? 'page' : undefined}
+              className={`rounded-lg px-3 py-2.5 text-center text-sm font-semibold transition-colors ${isLogin ? 'bg-surface text-ink shadow-sm' : 'text-muted hover:text-ink'}`}>
+              Masuk
+            </Link>
+            <Link to="/daftar" aria-current={!isLogin ? 'page' : undefined}
+              className={`rounded-lg px-3 py-2.5 text-center text-sm font-semibold transition-colors ${!isLogin ? 'bg-surface text-ink shadow-sm' : 'text-muted hover:text-ink'}`}>
+              Buat akun
+            </Link>
+          </nav>
           <div className="mb-8">
             <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-muted">Selamat datang di Arsiva</p>
             <h1 className="mt-3 text-[30px] font-semibold leading-tight tracking-[-0.035em] sm:text-[34px]">
@@ -110,11 +120,8 @@ export default function AuthPage({ mode }) {
             </button>
           </form>
 
-          <p className="mt-6 text-[15px] text-muted">
-            {isLogin ? 'Belum punya akun? ' : 'Sudah punya akun? '}
-            <Link to={isLogin ? '/daftar' : '/masuk'} className="font-semibold text-primary underline underline-offset-4">
-              {isLogin ? 'Daftar di sini' : 'Masuk'}
-            </Link>
+          <p className="mt-6 border-t border-line pt-5 text-sm leading-relaxed text-muted">
+            {isLogin ? 'Masuk untuk mengajukan peminjaman dan memantau status aset.' : 'Akun yang dibuat dapat langsung digunakan untuk layanan peminjaman sekolah.'}
           </p>
         </section>
       </main>

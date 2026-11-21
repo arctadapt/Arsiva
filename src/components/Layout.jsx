@@ -7,6 +7,26 @@ import { api } from '../lib/api.js'
 import { isAdmin } from '../lib/format.js'
 import { BrandMark, Wordmark } from './Brand.jsx'
 
+function NotificationButton({ count, inverse = false }) {
+  const label = count > 0 ? `Notifikasi, ${count} belum dibaca` : 'Notifikasi'
+
+  return (
+    <NavLink
+      to="/notifikasi"
+      title={label}
+      aria-label={label}
+      className={({ isActive }) => `relative grid h-10 w-10 place-items-center rounded-full border transition-colors ${inverse ? (isActive ? 'border-white/25 bg-white/10 text-white' : 'border-white/15 bg-white/5 text-white/85 hover:bg-white/10') : (isActive ? 'border-line bg-sunken text-ink' : 'border-line bg-surface text-muted hover:bg-sunken hover:text-ink')}`}
+    >
+      <Bell className="h-[18px] w-[18px]" aria-hidden />
+      {count > 0 && (
+        <span className="absolute -right-1 -top-1 grid min-h-5 min-w-5 place-items-center rounded-full bg-[#697565] px-1 text-[10px] font-bold leading-none text-[#1E201E]" aria-hidden="true">
+          {count > 99 ? '99+' : count}
+        </span>
+      )}
+    </NavLink>
+  )
+}
+
 function NavItem({ to, icon: Icon, children, badge = 0, end }) {
   return (
     <NavLink
@@ -80,10 +100,12 @@ export default function Layout() {
           <Menu className="h-6 w-6" />
         </button>
         <Wordmark />
-        <div className="flex-1" />
-        <button onClick={toggle} className="rounded-lg p-2 hover:bg-white/10" aria-label={themeLabel}>
-          <ThemeIcon className="h-5 w-5" />
-        </button>
+        <div className="ml-auto flex items-center gap-1.5">
+          <NotificationButton count={counts.unread} inverse />
+          <button onClick={toggle} className="grid h-10 w-10 place-items-center rounded-full border border-white/15 text-white/85 hover:bg-white/10" aria-label={themeLabel} title={themeLabel}>
+            <ThemeIcon className="h-[18px] w-[18px]" aria-hidden />
+          </button>
+        </div>
       </header>
 
       {open && <div className="fixed inset-0 z-40 bg-[rgb(6_28_37/0.6)] lg:hidden" onClick={() => setOpen(false)} aria-hidden />}
@@ -106,7 +128,6 @@ export default function Layout() {
           <NavItem to="/" icon={Home} end>Beranda</NavItem>
           <NavItem to="/katalog" icon={Boxes}>Katalog</NavItem>
           <NavItem to="/riwayat" icon={History}>Riwayat</NavItem>
-          <NavItem to="/notifikasi" icon={Bell} badge={counts.unread}>Notifikasi</NavItem>
           {admin && (
             <>
               <div className="mx-3 my-4 border-t border-white/15" role="separator" />
@@ -148,7 +169,8 @@ export default function Layout() {
             <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-muted">Arsiva / Inventaris</p>
             <p className="mt-1 text-sm font-semibold text-ink">Ruang kendali sekolah</p>
           </div>
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3">
+            <NotificationButton count={counts.unread} />
             <button onClick={toggle} className="grid h-10 w-10 place-items-center rounded-full border border-line bg-surface text-muted transition-colors hover:text-ink" aria-label={themeLabel} title={themeLabel}>
               <ThemeIcon className="h-4 w-4" aria-hidden />
             </button>
