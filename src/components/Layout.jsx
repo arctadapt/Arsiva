@@ -249,7 +249,7 @@ export default function Layout() {
       </aside>
 
       <main id="isi" className="min-w-0 flex-1" tabIndex={-1}>
-        <header className="hidden h-[82px] items-center justify-between border-b border-line/70 bg-bg/80 px-8 backdrop-blur lg:flex 2xl:px-12">
+        <header className="relative z-50 hidden h-[82px] items-center justify-between border-b border-line/70 bg-bg/80 px-8 backdrop-blur lg:flex 2xl:px-12">
           <div>
             <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-muted">Arsiva / Inventaris</p>
             <p className="mt-1 text-sm font-semibold text-ink">Ruang kendali sekolah</p>

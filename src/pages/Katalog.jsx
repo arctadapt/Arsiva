@@ -23,11 +23,25 @@ function BorrowDialog({ target, onClose, onDone }) {
   const isBarang = target?.jenis === 'barang'
 
   async function submit() {
-    if (!isBarang && (!tanggalMulai || !tanggalSelesai ||
-      new Date(tanggalMulai) >= new Date(tanggalSelesai) ||
-      new Date(tanggalMulai) <= new Date() || keperluan.trim().length < 3)) {
-      setError('Isi jadwal yang valid dan keperluan minimal 3 karakter.')
-      return
+    if (!isBarang) {
+      const mulai = new Date(tanggalMulai)
+      const selesai = new Date(tanggalSelesai)
+      if (!tanggalMulai || !tanggalSelesai || !Number.isFinite(mulai.getTime()) || !Number.isFinite(selesai.getTime())) {
+        setError('Isi tanggal dan jam mulai serta selesai dengan lengkap.')
+        return
+      }
+      if (mulai.getTime() <= Date.now()) {
+        setError('Waktu mulai harus lebih dari waktu sekarang. Periksa tanggal dan jam yang dipilih.')
+        return
+      }
+      if (selesai.getTime() <= mulai.getTime()) {
+        setError('Waktu selesai harus setelah waktu mulai.')
+        return
+      }
+      if (keperluan.trim().length < 3) {
+        setError('Keperluan harus diisi minimal 3 karakter.')
+        return
+      }
     }
     setBusy(true)
     setError('')
@@ -81,16 +95,16 @@ function BorrowDialog({ target, onClose, onDone }) {
             <div className="space-y-3">
               <p>Permintaan ruangan memerlukan konfirmasi PIC kelas sebelum keputusan admin.</p>
               <label className="label" htmlFor="mulai">Mulai</label>
-              <input id="mulai" type="datetime-local" className="input" value={tanggalMulai} onChange={e=>setTanggalMulai(e.target.value)} />
+              <input id="mulai" type="datetime-local" className="input" min={new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0,16)} value={tanggalMulai} onChange={e=>setTanggalMulai(e.target.value)} />
               <label className="label" htmlFor="selesai">Selesai</label>
-              <input id="selesai" type="datetime-local" className="input" value={tanggalSelesai} onChange={e=>setTanggalSelesai(e.target.value)} />
+              <input id="selesai" type="datetime-local" className="input" min={tanggalMulai || undefined} value={tanggalSelesai} onChange={e=>setTanggalSelesai(e.target.value)} />
               <label className="label" htmlFor="keperluan">Keperluan</label>
               <textarea id="keperluan" className="input" maxLength={500} value={keperluan} onChange={e=>setKeperluan(e.target.value)} />
               <label className="label" htmlFor="catatan">Catatan (opsional)</label>
               <textarea id="catatan" className="input" maxLength={500} value={catatan} onChange={e=>setCatatan(e.target.value)} />
             </div>
           )}
-          <p className="text-sm text-muted">Admin akan meninjau permintaanmu dan menentukan lama peminjaman.</p>
+          <p className="text-sm text-muted">{isBarang ? 'Admin akan meninjau permintaanmu dan menentukan lama peminjaman.' : 'Pastikan tanggal dan jam mulai masih di masa depan. Admin akan meninjau jadwal dan meminta konfirmasi PIC.'}</p>
           {error && <p role="alert" className="rounded-lg border border-bad/30 bg-bad/5 p-3 text-sm">{error}</p>}
         </div>
       )}
