@@ -197,7 +197,7 @@ router.post('/requests/:id/contact-pic', requireAdmin, wrap(async (req,res) => {
     await c.query(`UPDATE request SET pic_phone=$2,pic_contacted_at=NOW(),handled_by=$3,
       workflow_status='WAITING_FOR_PIC' WHERE id_request=$1`,[id,phone,req.user.id])
     await c.query(`INSERT INTO arsiva_request_audit(request_id,actor_id,event,detail)
-      VALUES($1,$2,'PIC_CONTACTED',jsonb_build_object('phone',$3))`,[id,req.user.id,phone])
+      VALUES($1,$2,'PIC_CONTACTED',jsonb_build_object('phone',$3::text))`,[id,req.user.id,phone])
     const msg=`Halo PIC kelas ${q.kelas}. Mohon konfirmasi peminjaman ${q.nama_ruangan} oleh ${q.nama_lengkap} pada ${q.tanggal_mulai} sampai ${q.tanggal_selesai}. Keperluan: ${q.keperluan}. Apakah disetujui?`
     url=`https://wa.me/${phone}?text=${encodeURIComponent(msg)}`
   })
@@ -214,7 +214,7 @@ router.post('/requests/:id/pic-decision', requireAdmin, wrap(async(req,res)=>{
     await c.query(`UPDATE request SET pic_status=$2,workflow_status=$3,pic_confirmed_at=NOW(),
       pic_notes=$4,handled_by=$5,status=CASE WHEN $2='REJECTED' THEN true ELSE false END,final_decided_at=CASE WHEN $2='REJECTED' THEN NOW() ELSE NULL END WHERE id_request=$1`,[id,decision,decision==='APPROVED'?'PIC_APPROVED':'PIC_REJECTED',notes,req.user.id])
     await c.query(`INSERT INTO arsiva_request_audit(request_id,actor_id,event,detail)
-      VALUES($1,$2,'PIC_DECISION',jsonb_build_object('decision',$3,'notes',$4))`,[id,req.user.id,decision,notes])
+      VALUES($1,$2,'PIC_DECISION',jsonb_build_object('decision',$3::text,'notes',$4::text))`,[id,req.user.id,decision,notes])
     await notify(c,q.id_user,`PIC kelas ${q.kelas} ${decision==='APPROVED'?'menyetujui':'menolak'} permintaan ruangan pada ${q.tanggal_mulai}. ${notes}`)
   })
   res.json({message:'Keputusan PIC dicatat.'})
@@ -306,7 +306,7 @@ router.post('/requests/:id/reject', requireAdmin, wrap(async (req, res) => {
     if (q.id_ruangan) {
       if (!ACTIVE_CLASS.includes(q.workflow_status)) throw new HttpError(409,'Permintaan telah diputuskan.')
       await c.query("UPDATE request SET status=true,workflow_status='REJECTED_BY_ADMIN',handled_by=$2,final_decided_at=NOW(),final_reason=$3 WHERE id_request=$1",[id,req.user.id,alasan])
-      await c.query("INSERT INTO arsiva_request_audit(request_id,actor_id,event,detail) VALUES($1,$2,'ADMIN_REJECTED',jsonb_build_object('reason',$3))",[id,req.user.id,alasan])
+      await c.query("INSERT INTO arsiva_request_audit(request_id,actor_id,event,detail) VALUES($1,$2,'ADMIN_REJECTED',jsonb_build_object('reason',$3::text))",[id,req.user.id,alasan])
     } else {
       await c.query(`INSERT INTO pinjam (id_user,id_barang,id_ruangan,tanggal_pinjam,status_pinjam,jenis_peminjaman,id_notif,jumlah_barang,alasan)
         VALUES($1,$2,$3,$4,false,'barang',$5,$6,$7)`,[q.id_user,q.id_barang,q.id_ruangan,q.tanggal_pinjam,notifId,q.jumlah_barang||1,alasan])
