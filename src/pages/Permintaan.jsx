@@ -18,6 +18,14 @@ const DURASI = [
 ]
 const ALASAN_CEPAT = ['Stok tidak cukup', 'Sedang dipakai kegiatan lain', 'Jadwal bentrok']
 
+function normalizeWhatsAppNumber(value) {
+  let number = value.replace(/\D/g, '')
+  if (number.startsWith('00')) number = number.slice(2)
+  if (number.startsWith('0')) number = `62${number.slice(1)}`
+  else if (number.startsWith('8')) number = `62${number}`
+  return number
+}
+
 /** Mengembalikan pesan kendala bila permintaan tidak bisa disetujui saat ini. */
 function kendala(r) {
   if (r.jenis === 'barang' && r.stok_sekarang < r.jumlah) {
@@ -30,6 +38,7 @@ function kendala(r) {
 function Keputusan({ action, onClose, onDone }) {
   const toast = useToast()
   const [durasi, setDurasi] = useState(7)
+  const [nomorWhatsApp, setNomorWhatsApp] = useState('')
   const [alasan, setAlasan] = useState('')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
@@ -39,15 +48,39 @@ function Keputusan({ action, onClose, onDone }) {
 
   async function submit(e) {
     e.preventDefault()
-    setBusy(true)
     setError('')
+
+    const needsWhatsApp = approve && r?.jenis === 'ruangan'
+    const phone = needsWhatsApp ? normalizeWhatsAppNumber(nomorWhatsApp) : ''
+    if (needsWhatsApp && !/^[1-9]\d{7,14}$/.test(phone)) {
+      setError('Masukkan nomor WhatsApp yang valid, termasuk kode negara. Nomor Indonesia 08 akan disesuaikan ke 62.')
+      return
+    }
+
+    const batasKembali = new Intl.DateTimeFormat('id-ID', { dateStyle: 'long' })
+      .format(new Date(Date.now() + durasi * 86_400_000))
+    const pesanWhatsApp = `Halo Bapak/Ibu penanggung jawab kelas ${r?.kelas || 'terkait'}. Permintaan peminjaman ruangan ${r?.nama} oleh ${r?.peminjam} telah disetujui selama ${durasi} hari, sampai ${batasKembali}. Terima kasih.`
+    const urlWhatsApp = needsWhatsApp ? `https://wa.me/${phone}?text=${encodeURIComponent(pesanWhatsApp)}` : ''
+    let tabWhatsApp = null
+
+    if (needsWhatsApp) {
+      tabWhatsApp = window.open('about:blank', '_blank')
+      if (tabWhatsApp) tabWhatsApp.opener = null
+    }
+
+    setBusy(true)
     try {
       if (approve) await api.post(`/loans/requests/${r.id}/approve`, { durasi_hari: durasi })
       else await api.post(`/loans/requests/${r.id}/reject`, { alasan })
       toast.success(approve ? `Permintaan ${r.peminjam} disetujui.` : `Permintaan ${r.peminjam} ditolak.`)
       refreshCounts()
       onDone()
+      if (needsWhatsApp) {
+        if (tabWhatsApp) tabWhatsApp.location.href = urlWhatsApp
+        else window.location.assign(urlWhatsApp)
+      }
     } catch (err) {
+      tabWhatsApp?.close()
       setError(err.message)
     } finally {
       setBusy(false)
@@ -64,7 +97,7 @@ function Keputusan({ action, onClose, onDone }) {
           <button type="button" className="btn-quiet" onClick={onClose} disabled={busy}>Batal</button>
           <button type="submit" form="form-keputusan" className={approve ? 'btn-primary' : 'btn-danger'}
             disabled={busy || (approve && !!blocked) || (!approve && alasan.trim().length < 3)}>
-            {busy ? 'Menyimpan...' : approve ? 'Setujui' : 'Tolak permintaan'}
+            {busy ? 'Menyimpan...' : approve ? (r?.jenis === 'ruangan' ? 'Setujui & buka WhatsApp' : 'Setujui permintaan') : 'Tolak permintaan'}
           </button>
         </>
       }
@@ -82,15 +115,26 @@ function Keputusan({ action, onClose, onDone }) {
                 <span>{blocked} Tolak permintaan ini atau tunggu stok kembali.</span>
               </p>
             ) : (
-              <div>
-                <label htmlFor="durasi" className="label">Lama peminjaman</label>
-                <select id="durasi" className="input" value={durasi} onChange={(e) => setDurasi(Number(e.target.value))} data-autofocus>
-                  {DURASI.map((d) => <option key={d.v} value={d.v}>{d.t}</option>)}
-                </select>
-                <p className="hint">
-                  {r.jenis === 'barang' ? `Stok ${r.nama} berkurang ${r.jumlah}.` : `${r.nama} ditandai sedang dipakai.`}
-                </p>
-              </div>
+              <>
+                <div>
+                  <label htmlFor="durasi" className="label">Lama peminjaman</label>
+                  <select id="durasi" className="input" value={durasi} onChange={(e) => setDurasi(Number(e.target.value))} data-autofocus>
+                    {DURASI.map((d) => <option key={d.v} value={d.v}>{d.t}</option>)}
+                  </select>
+                  <p className="hint">
+                    {r.jenis === 'barang' ? `Stok ${r.nama} berkurang ${r.jumlah}.` : `${r.nama} ditandai sedang dipakai.`}
+                  </p>
+                </div>
+                {r.jenis === 'ruangan' && (
+                  <div>
+                    <label htmlFor="nomor-wa" className="label">Nomor WhatsApp penanggung jawab kelas</label>
+                    <input id="nomor-wa" type="tel" inputMode="tel" autoComplete="tel" className="input"
+                      value={nomorWhatsApp} onChange={(e) => setNomorWhatsApp(e.target.value)}
+                      placeholder="0812 3456 7890" maxLength={24} aria-describedby="nomor-wa-bantuan" />
+                    <p id="nomor-wa-bantuan" className="hint">Boleh masukkan nomor lokal 08… atau format internasional +62…</p>
+                  </div>
+                )}
+              </>
             )
           ) : (
             <div>
