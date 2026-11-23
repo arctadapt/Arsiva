@@ -1,5 +1,8 @@
-import 'dotenv/config'
+import dotenv from 'dotenv'
 import pg from 'pg'
+
+dotenv.config({ path: '.env.development.local' })
+dotenv.config()
 import { HttpError } from './lib/http.js'
 
 const { Pool } = pg

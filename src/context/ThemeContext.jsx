@@ -10,7 +10,7 @@ export function ThemeProvider({ children }) {
 
   useEffect(() => {
     document.documentElement.classList.toggle('dark', theme === 'dark')
-    document.querySelector('meta[name="theme-color"]')?.setAttribute('content', theme === 'dark' ? '#061c25' : '#0e4a5c')
+    document.querySelector('meta[name="theme-color"]')?.setAttribute('content', theme === 'dark' ? '#1E201E' : '#ECDFCC')
   }, [theme])
 
   const setTheme = useCallback((t) => {
