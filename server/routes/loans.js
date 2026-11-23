@@ -234,7 +234,7 @@ router.post('/requests/:id/pic-decision', requireAdmin, wrap(async(req,res)=>{
     const {rows:[q]}=await c.query('SELECT * FROM request WHERE id_request=$1 AND status=false FOR UPDATE',[id])
     if (!q || q.workflow_status!=='WAITING_FOR_PIC' || !q.pic_contacted_at) throw new HttpError(409,'PIC belum dihubungi atau keputusan sudah dicatat.')
     await c.query(`UPDATE request SET pic_status=$2,workflow_status=$3,pic_confirmed_at=NOW(),
-      pic_notes=$4,handled_by=$5,status=CASE WHEN $2='REJECTED' THEN true ELSE false END,final_decided_at=CASE WHEN $2='REJECTED' THEN NOW() ELSE NULL END WHERE id_request=$1`,[id,decision,decision==='APPROVED'?'PIC_APPROVED':'PIC_REJECTED',notes,req.user.id])
+      pic_notes=$4,handled_by=$5,status=CASE WHEN $2::text='REJECTED' THEN true ELSE false END,final_decided_at=CASE WHEN $2::text='REJECTED' THEN NOW() ELSE NULL END WHERE id_request=$1`,[id,decision,decision==='APPROVED'?'PIC_APPROVED':'PIC_REJECTED',notes,req.user.id])
     await c.query(`INSERT INTO arsiva_request_audit(request_id,actor_id,event,detail)
       VALUES($1,$2,'PIC_DECISION',jsonb_build_object('decision',$3::text,'notes',$4::text))`,[id,req.user.id,decision,notes])
     await notify(c,q.id_user,`PIC kelas ${q.kelas} ${decision==='APPROVED'?'menyetujui':'menolak'} permintaan ruangan pada ${q.tanggal_mulai}. ${notes}`)
