@@ -198,7 +198,29 @@ router.post('/requests/:id/contact-pic', requireAdmin, wrap(async (req,res) => {
       workflow_status='WAITING_FOR_PIC' WHERE id_request=$1`,[id,phone,req.user.id])
     await c.query(`INSERT INTO arsiva_request_audit(request_id,actor_id,event,detail)
       VALUES($1,$2,'PIC_CONTACTED',jsonb_build_object('phone',$3::text))`,[id,req.user.id,phone])
-    const msg=`Halo PIC kelas ${q.kelas}. Mohon konfirmasi peminjaman ${q.nama_ruangan} oleh ${q.nama_lengkap} pada ${q.tanggal_mulai} sampai ${q.tanggal_selesai}. Keperluan: ${q.keperluan}. Apakah disetujui?`
+    const formatWIB = (value) => new Intl.DateTimeFormat('id-ID', {
+      timeZone: 'Asia/Jakarta', day: 'numeric', month: 'long', year: 'numeric',
+      hour: '2-digit', minute: '2-digit', hourCycle: 'h23',
+    }).format(new Date(value))
+    const msg = [
+      '*KONFIRMASI PEMINJAMAN RUANGAN*',
+      '',
+      `Halo Bapak/Ibu PIC kelas ${q.kelas},`,
+      'Mohon konfirmasi permohonan peminjaman ruangan berikut:',
+      '',
+      `🏫 *Ruangan:* ${q.nama_ruangan}`,
+      `👤 *Peminjam:* ${q.nama_lengkap}`,
+      `📚 *Kelas peminjam:* ${q.kelas}`,
+      `📅 *Mulai:* ${formatWIB(q.tanggal_mulai)} WIB`,
+      `📅 *Selesai:* ${formatWIB(q.tanggal_selesai)} WIB`,
+      `📝 *Keperluan:* ${q.keperluan}`,
+      ...(q.catatan ? [`💬 *Catatan:* ${q.catatan}`] : []),
+      '',
+      'Apakah permohonan ini *disetujui* atau *ditolak*?',
+      'Mohon balas pesan ini dengan keputusan Bapak/Ibu.',
+      '',
+      'Terima kasih.',
+    ].join('\n')
     url=`https://wa.me/${phone}?text=${encodeURIComponent(msg)}`
   })
   res.json({url,message:'Kontak PIC dicatat. Kirim pesan WhatsApp secara manual.'})
