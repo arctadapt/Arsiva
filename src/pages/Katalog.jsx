@@ -13,16 +13,29 @@ import { EmptyState, ErrorState, ListSkeleton, PageHeader, Tabs } from '../compo
 function BorrowDialog({ target, onClose, onDone }) {
   const toast = useToast()
   const [jumlah, setJumlah] = useState(1)
+  const [tanggalMulai, setTanggalMulai] = useState('')
+  const [tanggalSelesai, setTanggalSelesai] = useState('')
+  const [keperluan, setKeperluan] = useState('')
+  const [catatan, setCatatan] = useState('')
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
   const item = target?.item
   const isBarang = target?.jenis === 'barang'
 
   async function submit() {
+    if (!isBarang && (!tanggalMulai || !tanggalSelesai ||
+      new Date(tanggalMulai) >= new Date(tanggalSelesai) ||
+      new Date(tanggalMulai) <= new Date() || keperluan.trim().length < 3)) {
+      setError('Isi jadwal yang valid dan keperluan minimal 3 karakter.')
+      return
+    }
     setBusy(true)
     setError('')
     try {
-      await api.post('/loans/requests', { jenis: target.jenis, id: item.id, jumlah: isBarang ? jumlah : undefined })
+      await api.post('/loans/requests', { jenis: target.jenis, id: item.id,
+        jumlah: isBarang ? jumlah : undefined,
+        ...(!isBarang ? {tanggal_mulai: new Date(tanggalMulai).toISOString(),
+          tanggal_selesai: new Date(tanggalSelesai).toISOString(),keperluan,catatan} : {}) })
       toast.success('Permintaan terkirim. Kamu akan dapat notifikasi saat admin memutuskan.')
       refreshCounts()
       onDone()
@@ -65,7 +78,17 @@ function BorrowDialog({ target, onClose, onDone }) {
               </div>
             </div>
           ) : (
-            <p>Kamu meminta pemakaian ruangan ini. Ruangan dianggap terpakai sampai pengembaliannya dicatat.</p>
+            <div className="space-y-3">
+              <p>Permintaan ruangan memerlukan konfirmasi PIC kelas sebelum keputusan admin.</p>
+              <label className="label" htmlFor="mulai">Mulai</label>
+              <input id="mulai" type="datetime-local" className="input" value={tanggalMulai} onChange={e=>setTanggalMulai(e.target.value)} />
+              <label className="label" htmlFor="selesai">Selesai</label>
+              <input id="selesai" type="datetime-local" className="input" value={tanggalSelesai} onChange={e=>setTanggalSelesai(e.target.value)} />
+              <label className="label" htmlFor="keperluan">Keperluan</label>
+              <textarea id="keperluan" className="input" maxLength={500} value={keperluan} onChange={e=>setKeperluan(e.target.value)} />
+              <label className="label" htmlFor="catatan">Catatan (opsional)</label>
+              <textarea id="catatan" className="input" maxLength={500} value={catatan} onChange={e=>setCatatan(e.target.value)} />
+            </div>
           )}
           <p className="text-sm text-muted">Admin akan meninjau permintaanmu dan menentukan lama peminjaman.</p>
           {error && <p role="alert" className="rounded-lg border border-bad/30 bg-bad/5 p-3 text-sm">{error}</p>}

@@ -12,7 +12,11 @@ router.get('/', requireAuth, wrap(async (req, res) => {
        FROM notifikasi WHERE id_user = $1 ORDER BY created_at DESC, id_notif DESC LIMIT 100`,
     [req.user.id],
   )
-  res.json({ notifications: rows, belum_dibaca: rows.filter((n) => !n.dibaca).length })
+  const { rows: [count] } = await query(
+    'SELECT COUNT(*)::int AS total FROM notifikasi WHERE id_user = $1 AND NOT COALESCE(is_read, false)',
+    [req.user.id],
+  )
+  res.json({ notifications: rows, belum_dibaca: count.total })
 }))
 
 router.post('/read-all', requireAuth, wrap(async (req, res) => {

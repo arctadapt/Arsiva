@@ -159,6 +159,64 @@ function Keputusan({ action, onClose, onDone }) {
   )
 }
 
+function ClassWorkflow({action,onClose,onDone}) {
+  const r=action?.row
+  const toast=useToast()
+  const [phone,setPhone]=useState(r?.pic_phone||'')
+  const [decision,setDecision]=useState('APPROVED')
+  const [notes,setNotes]=useState('')
+  const [reason,setReason]=useState('')
+  const [busy,setBusy]=useState(false)
+  const [error,setError]=useState('')
+  const status=r?.workflow_status||'PENDING_ADMIN_CONTACT'
+  async function submit(e) {
+    e.preventDefault();setError('');setBusy(true)
+    let tab=null
+    try {
+      if(action.type==='contact') {
+        const normalized=normalizeWhatsAppNumber(phone)
+        if(!/^628[0-9]{7,12}$/.test(normalized)) throw new Error('Nomor PIC harus format Indonesia yang valid.')
+        tab=window.open('about:blank','_blank')
+        if(tab)tab.opener=null
+        const result=await api.post(`/loans/requests/${r.id}/contact-pic`,{phone:normalized})
+        if(tab)tab.location.href=result.url
+        else window.location.assign(result.url)
+      } else if(action.type==='pic') {
+        await api.post(`/loans/requests/${r.id}/pic-decision`,{decision,notes})
+      } else if(action.type==='approve') {
+        await api.post(`/loans/requests/${r.id}/approve`,{})
+      } else {
+        await api.post(`/loans/requests/${r.id}/reject`,{alasan:reason})
+      }
+      toast.success('Perubahan permintaan kelas tersimpan.')
+      refreshCounts();onDone()
+    } catch(err) {tab?.close();setError(err.message)}
+    finally {setBusy(false)}
+  }
+  return <Modal open={!!action} onClose={()=>!busy&&onClose()} title={r?`${r.nama} — ${r.peminjam}`:''}
+    footer={<><button className="btn-quiet" onClick={onClose} disabled={busy}>Batal</button>
+      <button className="btn-primary" form="class-workflow" type="submit" disabled={busy}>{busy?'Menyimpan...':'Lanjutkan'}</button></>}>
+    {r&&<form id="class-workflow" onSubmit={submit} className="space-y-3">
+      <p className="text-sm text-muted">{new Date(r.tanggal_mulai).toLocaleString('id-ID')} – {new Date(r.tanggal_selesai).toLocaleString('id-ID')}</p>
+      <p>Keperluan: {r.keperluan}</p>
+      {r.catatan&&<p>Catatan: {r.catatan}</p>}
+      <p className="text-sm">Status: {status.replaceAll('_',' ')}</p>
+      {action.type==='contact'&&<><label className="label" htmlFor="pic-phone">Nomor WhatsApp PIC</label>
+        <input id="pic-phone" className="input" value={phone} onChange={e=>setPhone(e.target.value)} placeholder="081234567890" required />
+        <p className="hint">WhatsApp dibuka setelah dicatat. Admin tetap harus mengirim pesan secara manual.</p></>}
+      {action.type==='pic'&&<><label className="label" htmlFor="pic-decision">Konfirmasi PIC</label>
+        <select id="pic-decision" className="input" value={decision} onChange={e=>setDecision(e.target.value)}>
+          <option value="APPROVED">PIC menyetujui</option><option value="REJECTED">PIC menolak</option></select>
+        <label className="label" htmlFor="pic-notes">Catatan konfirmasi</label>
+        <textarea id="pic-notes" className="input" value={notes} onChange={e=>setNotes(e.target.value)} maxLength={500}/></>}
+      {action.type==='reject'&&<><label className="label" htmlFor="class-reason">Alasan penolakan</label>
+        <textarea id="class-reason" className="input" required minLength={3} maxLength={300} value={reason} onChange={e=>setReason(e.target.value)}/></>}
+      {action.type==='approve'&&<p>Konfirmasi PIC sudah disetujui. Lanjutkan keputusan akhir admin?</p>}
+      {error&&<p role="alert" className="text-bad text-sm">{error}</p>}
+    </form>}
+  </Modal>
+}
+
 export default function Permintaan() {
   const req = useFetch('/loans/requests')
   const [action, setAction] = useState(null)
@@ -185,11 +243,22 @@ export default function Permintaan() {
                 <div className="min-w-0 flex-1 basis-48">
                   <p className="font-semibold">{r.nama}{r.jenis === 'barang' ? `, ${r.jumlah} buah` : ''}</p>
                   <p className="text-sm text-muted">{r.peminjam}, {r.kelas}. Diajukan {waktuLalu(r.diajukan)}</p>
+                  {r.jenis==='ruangan'&&<p className="mt-1 text-xs text-muted">{(r.workflow_status||'PENDING_ADMIN_CONTACT').replaceAll('_',' ')} · {r.keperluan}</p>}
                   {masalah && <p className="mt-1 text-sm font-semibold text-warn">{masalah}</p>}
                 </div>
-                <div className="flex gap-2">
-                  <button className="btn-quiet btn-sm" onClick={() => setAction({ type: 'reject', row: r })}>Tolak</button>
-                  <button className="btn-primary btn-sm" onClick={() => setAction({ type: 'approve', row: r })}>Setujui</button>
+                <div className="flex flex-wrap gap-2">
+                  {r.jenis==='ruangan' ? <>
+                    {(!r.workflow_status||['PENDING_ADMIN_CONTACT','WAITING_FOR_PIC'].includes(r.workflow_status))&&
+                      <button className="btn-quiet btn-sm" onClick={()=>setAction({type:'contact',row:r})}>Hubungi PIC</button>}
+                    {r.workflow_status==='WAITING_FOR_PIC'&&
+                      <button className="btn-primary btn-sm" onClick={()=>setAction({type:'pic',row:r})}>Catat keputusan PIC</button>}
+                    {r.workflow_status==='PIC_APPROVED'&&
+                      <button className="btn-primary btn-sm" onClick={()=>setAction({type:'approve',row:r})}>Setujui</button>}
+                    <button className="btn-quiet btn-sm" onClick={()=>setAction({type:'reject',row:r})}>Tolak</button>
+                  </> : <>
+                    <button className="btn-quiet btn-sm" onClick={() => setAction({ type: 'reject', row: r })}>Tolak</button>
+                    <button className="btn-primary btn-sm" onClick={() => setAction({ type: 'approve', row: r })}>Setujui</button>
+                  </>}
                 </div>
               </li>
             )
@@ -197,7 +266,7 @@ export default function Permintaan() {
         </ul>
       )}
 
-      <Keputusan key={action ? `${action.type}${action.row.id}` : 'none'} action={action} onClose={() => setAction(null)} onDone={done} />
+      {action?.row?.jenis==='ruangan' ? <ClassWorkflow key={`${action.type}${action.row.id}`} action={action} onClose={()=>setAction(null)} onDone={done}/> : <Keputusan key={action ? `${action.type}${action.row.id}` : 'none'} action={action} onClose={() => setAction(null)} onDone={done} />}
     </>
   )
 }

@@ -86,7 +86,17 @@ function NotificationButton({ count, notifications, loading, inverse = false }) 
           )}
           {notifications.length > 0 && (
             <footer className="border-t border-line bg-bg/50 px-4 py-2.5 text-center">
-              <Link to="/notifikasi" onClick={() => setOpen(false)} className="text-xs font-semibold text-muted hover:text-ink">Buka pusat notifikasi</Link>
+              <button type="button" disabled={count === 0} onClick={async () => {
+                try {
+                  await api.post('/notifications/read-all')
+                  window.dispatchEvent(new Event('arsiva:refresh'))
+                  setOpen(false)
+                } catch (error) {
+                  window.alert(error.message || 'Gagal menandai notifikasi.')
+                }
+              }} className="text-xs font-semibold text-muted hover:text-ink disabled:cursor-not-allowed disabled:opacity-50">
+                Tandai telah dibaca
+              </button>
             </footer>
           )}
         </section>

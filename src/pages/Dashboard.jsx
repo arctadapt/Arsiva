@@ -1,8 +1,8 @@
 import { Link } from 'react-router-dom'
-import { ArrowRight, ArrowUpRight, Bell, Boxes, Clock3, PackageCheck, Sparkles, TrendingUp } from 'lucide-react'
+import { ArrowRight, ArrowUpRight, Boxes, Clock3, PackageCheck, Sparkles, TrendingUp } from 'lucide-react'
 import { useAuth } from '../context/AuthContext.jsx'
 import { useFetch } from '../lib/hooks.js'
-import { isAdmin, namaPanggilan, sisaWaktu, tgl, waktuLalu } from '../lib/format.js'
+import { isAdmin, namaPanggilan, sisaWaktu, tgl } from '../lib/format.js'
 import AssetTag from '../components/AssetTag.jsx'
 import ReturnButton from '../components/ReturnButton.jsx'
 import { EmptyState, ErrorState, ListSkeleton, PageHeader } from '../components/ui.jsx'
@@ -27,11 +27,9 @@ export default function Dashboard() {
   const admin = isAdmin(user)
   const stats = useFetch('/stats')
   const loans = useFetch('/loans')
-  const notif = useFetch('/notifications')
 
   const s = stats.data
   const aktif = (loans.data?.loans ?? []).filter((l) => l.status === 'dipinjam' || l.status === 'terlambat')
-  const terbaru = (notif.data?.notifications ?? []).slice(0, 4)
   const reloadAll = () => { stats.reload(); loans.reload() }
   const mainAction = admin ? '/kelola' : '/katalog'
 
@@ -152,32 +150,7 @@ export default function Dashboard() {
             </div>
           </section>
 
-          <section aria-labelledby="h-notif" className="rounded-2xl border border-line/80 bg-surface p-5 shadow-[0_8px_26px_rgba(30,32,30,0.035)] sm:p-6">
-            <div className="mb-4 flex items-center justify-between gap-3">
-              <div className="flex items-center gap-2.5">
-                <span className="grid h-9 w-9 place-items-center rounded-xl bg-sunken text-ink" aria-hidden>
-                  <Bell className="h-4 w-4" />
-                </span>
-                <h2 id="h-notif" className="text-base font-semibold">Kabar terbaru</h2>
-              </div>
-              <Link to="/notifikasi" className="text-sm font-semibold text-ink hover:text-muted">Semua</Link>
-            </div>
-            {notif.loading ? <ListSkeleton rows={2} /> : terbaru.length === 0 ? (
-              <p className="rounded-xl bg-bg/55 px-4 py-5 text-sm text-muted">Belum ada kabar baru. Notifikasi akan muncul di sini.</p>
-            ) : (
-              <ul className="divide-y divide-line">
-                {terbaru.map((n) => (
-                  <li key={n.id} className="flex gap-3 py-3 first:pt-0 last:pb-0">
-                    <span className={`mt-1.5 h-2 w-2 shrink-0 rounded-full ${n.dibaca ? 'bg-transparent' : 'bg-[#697565]'}`} aria-label={n.dibaca ? undefined : 'Belum dibaca'} />
-                    <div className="min-w-0">
-                      <p className="text-sm leading-snug">{n.pesan}</p>
-                      <p className="mt-1 text-xs text-muted">{waktuLalu(n.dibuat)}</p>
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </section>
+
         </div>
       </div>
     </>
