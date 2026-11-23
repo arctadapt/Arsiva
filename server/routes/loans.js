@@ -85,14 +85,21 @@ router.get('/requests', requireAuth, wrap(async (req, res) => {
 }))
 
 // Riwayat keputusan kelas, termasuk pembatalan dan penolakan PIC.
-router.get('/class-history',requireAuth,wrap(async(req,res)=>{
-  const {rows}=await query(`SELECT q.id_request AS id,q.workflow_status,q.pic_status,q.pic_notes,q.final_reason,
-    q.tanggal_mulai,q.tanggal_selesai,q.keperluan,q.catatan,q.tanggal_pinjam AS diajukan,
-    u.nama_lengkap AS peminjam,q.kelas,r.nama_ruangan AS nama
-    FROM request q JOIN users u ON u.id_user=q.id_user JOIN ruangan r ON r.id_ruangan=q.id_ruangan
-    WHERE q.id_ruangan IS NOT NULL AND q.status=true AND ($1::boolean OR q.id_user=$2)
-    ORDER BY q.id_request DESC LIMIT 300`,[isAdmin(req.user.role),req.user.id])
-  res.json({requests:rows})
+router.get('/class-history', requireAuth, wrap(async (req, res) => {
+  let rows
+  try {
+    ;({ rows } = await query(`SELECT q.id_request AS id,q.workflow_status,q.pic_status,q.pic_notes,q.final_reason,
+      q.tanggal_mulai,q.tanggal_selesai,q.keperluan,q.catatan,q.tanggal_pinjam AS diajukan,
+      u.nama_lengkap AS peminjam,q.kelas,r.nama_ruangan AS nama,q.id_ruangan AS item_id
+      FROM request q JOIN users u ON u.id_user=q.id_user JOIN ruangan r ON r.id_ruangan=q.id_ruangan
+      WHERE q.id_ruangan IS NOT NULL AND q.status=true AND ($1::boolean OR q.id_user=$2)
+      ORDER BY q.id_request DESC LIMIT 300`,[isAdmin(req.user.role),req.user.id]))
+  } catch (error) {
+    if (error.code !== '42703') throw error
+    // Riwayat lama tetap dapat dibaca sebelum migrasi skema v1.1.
+    rows = []
+  }
+  res.json({ requests: rows })
 }))
 
 // Ajukan peminjaman barang atau ruangan.
@@ -131,6 +138,13 @@ router.post('/requests', requireAuth, wrap(async (req, res) => {
           new Date(tanggal_mulai) >= new Date(tanggal_selesai) || new Date(tanggal_mulai) <= new Date()) {
         throw new HttpError(400, 'Jadwal tidak valid. Pilih waktu mulai di masa depan dan waktu selesai setelahnya.')
       }
+      // Beri pesan yang dapat ditindaklanjuti bila skema v1.1 belum tersedia.
+      const { rows: [schema] } = await c.query(`SELECT
+        COUNT(*) FILTER (WHERE column_name IN ('tanggal_mulai','tanggal_selesai','keperluan','catatan','workflow_status'))::int AS columns_ready
+        FROM information_schema.columns WHERE table_schema='public' AND table_name='request'`)
+      const { rows: [audit] } = await c.query("SELECT to_regclass('public.arsiva_request_audit') IS NOT NULL AS ready")
+      if (schema.columns_ready !== 5 || !audit.ready) throw new HttpError(503,
+        'Fitur peminjaman kelas belum aktif: migrasi database Arsiva v1.1 belum lengkap. Hubungi admin.')
       await c.query('SELECT pg_advisory_xact_lock($1)', [id])
       const clash = await c.query(`SELECT 1 FROM request WHERE id_ruangan = $1 AND status = false
         AND workflow_status IN ('PENDING_ADMIN_CONTACT','WAITING_FOR_PIC','PIC_APPROVED')
