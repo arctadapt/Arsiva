@@ -88,19 +88,25 @@ export default function Riwayat() {
   const admin = isAdmin(user)
   const loans = useFetch('/loans')
   const requests = useFetch('/loans/requests')
+  const classHistory = useFetch('/loans/class-history')
   const [filter, setFilter] = useState('semua')
 
   const all = useMemo(() => {
     const pending = (requests.data?.requests ?? []).map((r) => ({ ...r, key: `q${r.id}`, tanggal_pinjam: r.diajukan }))
     const done = (loans.data?.loans ?? []).map((l) => ({ ...l, key: `p${l.id}` }))
-    return [...pending, ...done]
-  }, [requests.data, loans.data])
+    const finalClass=(classHistory.data?.requests??[]).filter(r=>r.workflow_status!=='APPROVED').map(r=>({
+      ...r,key:`c${r.id}`,jenis:'ruangan',item_id:0,jumlah:1,
+      status:r.workflow_status==='CANCELLED'?'ditolak':'ditolak',
+      tanggal_pinjam:r.diajukan,alasan:r.final_reason||r.pic_notes|| (r.workflow_status==='CANCELLED'?'Dibatalkan siswa':'Ditolak PIC')
+    }))
+    return [...pending,...done,...finalClass]
+  }, [requests.data, loans.data, classHistory.data])
 
   const rows = all.filter((r) => matches(r, filter))
   const count = (f) => all.filter((r) => matches(r, f)).length
-  const loading = loans.loading || requests.loading
-  const error = loans.error || requests.error
-  const reload = () => { loans.reload(); requests.reload() }
+  const loading = loans.loading || requests.loading || classHistory.loading
+  const error = loans.error || requests.error || classHistory.error
+  const reload = () => { loans.reload(); requests.reload(); classHistory.reload() }
 
   const summary = [
     { label: 'Semua aktivitas', value: all.length, style: 'text-ink' },

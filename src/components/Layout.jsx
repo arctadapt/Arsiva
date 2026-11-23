@@ -33,7 +33,7 @@ function NotificationButton({ count, notifications, loading, inverse = false }) 
   }, [open])
 
   return (
-    <div ref={containerRef} className="relative z-40">
+    <div ref={containerRef} className="relative z-[110]">
       <button
         ref={buttonRef}
         type="button"
@@ -53,7 +53,7 @@ function NotificationButton({ count, notifications, loading, inverse = false }) 
       </button>
 
       {open && (
-        <section role="dialog" aria-label="Notifikasi terbaru" className="absolute right-0 top-full z-[70] mt-3 w-80 max-w-[calc(100vw-1.5rem)] overflow-hidden rounded-2xl border border-line bg-surface text-ink shadow-[0_20px_60px_rgba(30,32,30,0.22)]">
+        <section role="dialog" aria-label="Notifikasi terbaru" className="absolute right-0 top-full z-[120] mt-3 w-80 max-w-[calc(100vw-1.5rem)] overflow-hidden rounded-2xl border border-line bg-surface text-ink shadow-[0_20px_60px_rgba(30,32,30,0.22)]">
           <header className="flex items-center justify-between gap-3 border-b border-line px-4 py-3.5">
             <div>
               <h2 className="text-sm font-semibold">Notifikasi</h2>
@@ -86,7 +86,17 @@ function NotificationButton({ count, notifications, loading, inverse = false }) 
           )}
           {notifications.length > 0 && (
             <footer className="border-t border-line bg-bg/50 px-4 py-2.5 text-center">
-              <Link to="/notifikasi" onClick={() => setOpen(false)} className="text-xs font-semibold text-muted hover:text-ink">Buka pusat notifikasi</Link>
+              <button type="button" disabled={count === 0} onClick={async () => {
+                try {
+                  await api.post('/notifications/read-all')
+                  window.dispatchEvent(new Event('arsiva:refresh'))
+                  setOpen(false)
+                } catch (error) {
+                  window.alert(error.message || 'Gagal menandai notifikasi.')
+                }
+              }} className="text-xs font-semibold text-muted hover:text-ink disabled:cursor-not-allowed disabled:opacity-50">
+                Tandai telah dibaca
+              </button>
             </footer>
           )}
         </section>
@@ -167,7 +177,7 @@ export default function Layout() {
         Lewati ke konten
       </a>
 
-      <header className="sticky top-0 z-30 flex items-center gap-3 bg-rail px-4 py-3 text-white lg:hidden">
+      <header className="sticky top-0 z-[100] flex items-center gap-3 bg-rail px-4 py-3 text-white lg:hidden">
         <button onClick={() => setOpen(true)} className="rounded-lg p-2 hover:bg-white/10" aria-label="Buka menu" aria-expanded={open}>
           <Menu className="h-6 w-6" />
         </button>
@@ -239,7 +249,7 @@ export default function Layout() {
       </aside>
 
       <main id="isi" className="min-w-0 flex-1" tabIndex={-1}>
-        <header className="hidden h-[82px] items-center justify-between border-b border-line/70 bg-bg/80 px-8 backdrop-blur lg:flex 2xl:px-12">
+        <header className="relative z-[100] hidden h-[82px] items-center justify-between border-b border-line/70 bg-bg/80 px-8 backdrop-blur lg:flex 2xl:px-12">
           <div>
             <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-muted">Arsiva / Inventaris</p>
             <p className="mt-1 text-sm font-semibold text-ink">Ruang kendali sekolah</p>
