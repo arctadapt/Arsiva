@@ -40,7 +40,9 @@ router.get('/', requireAuth, wrap(async (req, res) => {
 
 // Permintaan yang menunggu keputusan. Admin melihat semua (terlama dulu), pengguna hanya miliknya.
 router.get('/requests', requireAuth, wrap(async (req, res) => {
-  const { rows } = await query(
+  let rows
+  try {
+    ;({ rows } = await query(
     `SELECT q.id_request AS id, 'menunggu' AS status,
             u.nama_lengkap AS peminjam, u.kelas,
             CASE WHEN q.id_ruangan IS NOT NULL THEN 'ruangan' ELSE 'barang' END AS jenis,
@@ -59,7 +61,26 @@ router.get('/requests', requireAuth, wrap(async (req, res) => {
       WHERE q.status = false AND (q.id_ruangan IS NULL OR q.workflow_status IS NULL OR q.workflow_status IN ('PENDING_ADMIN_CONTACT','WAITING_FOR_PIC','PIC_APPROVED')) AND ($1::boolean OR q.id_user = $2)
       ORDER BY q.tanggal_pinjam ASC, q.id_request ASC`,
     [isAdmin(req.user.role), req.user.id],
-  )
+    ))
+  } catch (error) {
+    if (error.code !== '42703') throw error
+    // Database belum dimigrasi: tetap tampilkan permintaan lama tanpa menghilangkan data.
+    ;({ rows } = await query(`SELECT q.id_request AS id, 'menunggu' AS status,
+      u.nama_lengkap AS peminjam, u.kelas,
+      CASE WHEN q.id_ruangan IS NOT NULL THEN 'ruangan' ELSE 'barang' END AS jenis,
+      COALESCE(q.id_ruangan, q.id_barang) AS item_id,
+      COALESCE(b.nama_barang, r.nama_ruangan) AS nama,
+      COALESCE(q.jumlah_barang, 1) AS jumlah, q.tanggal_pinjam AS diajukan,
+      b.jumlah_barang AS stok_sekarang,
+      COALESCE(r.status_ruangan, true) AS ruangan_tersedia
+      FROM request q LEFT JOIN users u ON u.id_user=q.id_user
+      LEFT JOIN barang b ON b.id_barang=q.id_barang
+      LEFT JOIN ruangan r ON r.id_ruangan=q.id_ruangan
+      WHERE q.status=false AND ($1::boolean OR q.id_user=$2)
+      ORDER BY q.tanggal_pinjam ASC, q.id_request ASC`,
+      [isAdmin(req.user.role), req.user.id]))
+  }
+
   res.json({ requests: rows })
 }))
 
